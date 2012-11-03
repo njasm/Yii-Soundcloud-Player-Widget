@@ -2,7 +2,7 @@
 
 ### Instalation
 
-* Copy yiiSoundcloudPlayerWidget.php into your /protected/extensions
+* Copy __**yiiSoundcloudPlayerWidget.php**__ into your __**/protected/extensions/**__
 
 ### How To Use
 
@@ -12,8 +12,9 @@ Inside your View file call the widget with:
 
 ```php
 <?php $this->widget('ext.yiisoundcloudplayerwidget', array(           
-    'url' => 'http://www.soundcloud.com/cutloosemusic'  // you can put here a profile, group, playlist or track url     
-)); ?>  
+    'url' => 'http://www.soundcloud.com/cutloosemusic'  // you can put here a profile, group, playlist or track url
+)); 
+?>  
 ```
 
 #### Minimal Parameters Multi Url
@@ -23,7 +24,8 @@ Inside your View file call the widget with:
     'url' => array('http://www.soundcloud.com/cutloosemusic', // this is a profile
         "http://soundcloud.com/hybrid-species/she-wants-revenge-take-the" // this a direct link to a track
     ),          
-)); ?>  
+)); 
+?>  
 ```
 
 #### Full Parameters
@@ -35,9 +37,10 @@ Inside your View file call the widget with:
     'color'         => 'ffaa66',    // default is Soundcloud color. hex triplet for player primary color.
     'auto_play'     => false,        // default is false.                
     'show_comments' => false,       // default is true. TimeBased comments on waveform.
-    'iframe'        => true,       // default is true => html5 player. false => old Adobe Flash player.                
+    'iframe'        => true,       // default is true => html5 player. false => old Adobe Flash player.        
     'url' => array('http://www.soundcloud.com/cutloosemusic', // this is a profile
         "http://soundcloud.com/hybrid-species/she-wants-revenge-take-the" // this a direct link to a track
     ),      
-)); ?>
+)); 
+?>
 ```  
