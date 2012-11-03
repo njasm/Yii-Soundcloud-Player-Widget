@@ -44,7 +44,7 @@ class yiiSoundcloudPlayerWidget extends CWidget {
     private $_curl;
     
     /**
-     * Data que chega da API em formato json
+     * cURL response data
      * @var Object
      * @access private
      */
@@ -70,7 +70,7 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      * @var string
      * @access private
      */
-    private $_format = '.json';
+    private $_format = 'json';
     
     /**
      * SOUNDCLOUD DEFINITION: (optional) The maximum width in px.
@@ -169,8 +169,8 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      * @access private
      */
     private function _buildURL($destUrl) {
-        $url = 'http://soundcloud.com/oembed?' . 'format=json&';
-        $url .= 'url=' . $destUrl;
+        $url = 'http://soundcloud.com/oembed?' . 'format=' . $this->_format;
+        $url .= '&url=' . $destUrl;
         $url .= isset($this->maxwidth) ? '&maxwidth=' . $this->maxwidth : '' ;
         $url .= isset($this->maxheight) ? '&maxheight=' . $this->maxheight : '';
         $url .= isset($this->color) ? '&color=' . $this->color : '';
