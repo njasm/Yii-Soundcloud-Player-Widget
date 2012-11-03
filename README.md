@@ -28,9 +28,9 @@ Inside your View file call the widget with:
 
 ```php
 <?php $this->widget('ext.yiisoundcloudplayerwidget', array(
-    //'maxwidth'      => 100,         // default I believe is 100. maxwidth in px.
+    'maxwidth'      => 50,         // default I believe is 100. maxwidth in px.
     'maxheight'     => 305,         // default is 81 for tracks and 305 for all others.
-    'color'         => 'ff0066',    // default is Soundcloud color. hex triplet for player primary color.
+    'color'         => 'ffaa66',    // default is Soundcloud color. hex triplet for player primary color.
     'auto_play'     => false,        // default is false.                
     'show_comments' => false,       // default is true. TimeBased comments on waveform.
     'iframe'        => true,       // default is true => html5 player. false => old Adobe Flash player.                
