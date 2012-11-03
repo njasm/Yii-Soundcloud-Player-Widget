@@ -1,4 +1,4 @@
-# Yii Framework Widget to embed Soundcloud html5 Player into Yii Framework web apps.
+## Yii Framework Widget to embed Soundcloud html5 Player into Yii Framework web apps.
 
 ### Instalation
 
@@ -14,6 +14,7 @@ Inside your View file call the widget with:
 <?php $this->widget('ext.yiisoundcloudplayerwidget', array(           
     'url' => 'http://www.soundcloud.com/cutloosemusic'  // you can put here a profile, group, playlist or track url     
 )); ?>  
+```
 
 #### Minimal Parameters Multi Url
 
@@ -23,6 +24,7 @@ Inside your View file call the widget with:
         "http://soundcloud.com/hybrid-species/she-wants-revenge-take-the" // this a direct link to a track
     ),          
 )); ?>  
+```
 
 #### Full Parameters
 
@@ -37,4 +39,5 @@ Inside your View file call the widget with:
     'url' => array('http://www.soundcloud.com/cutloosemusic', // this is a profile
         "http://soundcloud.com/hybrid-species/she-wants-revenge-take-the" // this a direct link to a track
     ),      
-)); ?>  
+)); ?>
+```  
