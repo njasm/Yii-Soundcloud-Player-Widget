@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Yii Framework Widget to embed Soundcloud html5 Player into Yii Framework web apps.
  *
