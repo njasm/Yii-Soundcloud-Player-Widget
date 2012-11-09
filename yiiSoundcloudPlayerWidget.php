@@ -9,8 +9,10 @@
  * @link        http://github.com/njasm/Yii-Soundcloud-Player-Widget
  * @category    Web Services
  * @package     Soundcloud Player Widget
- * @version     0.0.1
- * 
+ * @version     0.0.2
+ */
+
+/**
  * Copyright (c) 2012, Nelson J Morais
  * All rights reserved.
  * 
@@ -34,7 +36,6 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 class yiiSoundcloudPlayerWidget extends CWidget {
 
     /**
@@ -43,43 +44,56 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      * @access private
      */
     private $_curl;
-    
+
     /**
      * cURL response data
      * @var Object
      * @access private
      */
     private $_scResponse;
-    
+
     /**
-     * Control parameter to check if cURL extension is loaded
+     * Paramater for development. if set to true will echo out curl and soundcloud api http errors, if any.
      * @var boolean
-     * @access private
+     * @access public
      */
-    private $_curlLoaded;
-    
+    public $devel = true;
+
     /**
-     * SOUNDCLOUD DEFINITION: A Soundcloud URL for a track, set, group, user.
-     * @var string
+     * Cache data. for high-traffic web apps and Soundcloud api politeness
+     * @var boolean
+     * @access public
+     */
+    public $cache = true;
+
+    /**
+     * Cache time. Time to keep data in cache server before expire
+     * @var integer
+     * @access public
+     */
+    public $cacheTime = 300; // 5 minutes to keep cache $id in cache server.
+
+    /**
+     * SOUNDCLOUD DEFINITION: A Soundcloud URL for a track, set, group, user, etc.
      * @access public
      */
     public $url;
-    
+
     /**
      * SOUNDCLOUD DEFINITION: (optional) Either xml, json or js (for jsonp). 
-     * Since we're only echoing the embed code recieved the developer doesn't need to access this parameter.
+     * Since we're only echoing the iframe code received, the developer doesn't need to access this parameter.
      * @var string
      * @access private
      */
     private $_format = 'json';
-    
+
     /**
      * SOUNDCLOUD DEFINITION: (optional) The maximum width in px.
      * @var integer
      * @access public
-     */    
+     */
     public $maxwidth;
-    
+
     /**
      * SOUNDCLOUD DEFINITION: (optional) The maximum height in px. The default is 81 for tracks and 305 for all other.
      * @var integer
@@ -93,21 +107,21 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      * @access public
      */
     public $color;
-    
+
     /**
      * SOUNDCLOUD DEFINITION: (optional) Whether the widget plays on load.
      * @var boolean
      * @access public
      */
     public $auto_play = false;
-    
+
     /**
      * SOUNDCLOUD DEFINITION: (optional) Whether the player displays timed comments.
      * @var boolean
      * @access public
      */
     public $show_comments = true;
-    
+
     /**
      * SOUNDCLOUD DEFINITION: (optional) Whether the new HTML5 Iframe-based Widget or the old Adobe Flash 
      * Widget will be returned.
@@ -115,55 +129,94 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      * @access public
      */
     public $iframe = true;
-        
-        
-    public function init() {       
-        // lets check if we have cURL extension
-        $this->_curlLoaded = (in_array('curl', get_loaded_extensions(false))) ? true : false;
-    }    
-    
+
     public function run() {
-        // if we don't have cURL extension stop everything :(
-        if (!$this->_curlLoaded) {
-            echo '<p>We need cURL extension loaded in php to be able to run. today is a sad day ;(</p>';
-            return;
-        }
-        
-        // any problem with $this->url ?!
-        if (empty($this->url)) {
-            echo '<p>No "url" parameter.</p>';
-            return;
-        }
-      
-        // is $this->url an array?!
-        if (is_array($this->url)) {
-            foreach($this->url as $url) {
-                //call _buildCurl method with needed URL param
-                $this->_buildCurl($this->_buildURL($url));
-                echo $this->_scResponse->data->html;
+        if (!extension_loaded('curl')) {
+            if ($this->devel == true) {
+                echo '<p>We need cURL extension loaded in php to be able to run. today is a sad day ;(</p>';
             }
             return;
         }
 
-        //call _buildCurl method with needed URL param
-        $this->_buildCurl($this->_buildURL($this->url));
-        echo $this->_scResponse->data->html;
+        if (empty($this->url)) {
+            if ($this->devel == true) {
+                echo '<p>No "url" parameter.</p>';
+            }
+            return;
+        }
+
+        if (is_array($this->url)) {
+            foreach ($this->url as $url) {
+                // are this application using cache? and can we cache our data?!
+                if ((Yii::app()->cache != null) && ($this->cache == true)) {
+                    // check if we have $this->url already on cache server
+                    $cachedUrl = Yii::app()->cache->get('yiiScUrl' . $url);
+                    if ($cachedUrl === false) {
+                        $this->_buildCurl($this->_buildURL($url));
+
+                        if ($this->_scResponse->info->http_code == 200) {
+                            echo $this->_scResponse->data->html;
+                            Yii::app()->cache->set('yiiScUrl' . $url, $this->_scResponse->data->html, $this->cacheTime);
+                        } else {
+                            echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $url) : '';
+                        }
+                    } else {
+                        echo $cachedUrl;
+                    }
+                    continue;
+                }
+                $this->_buildCurl($this->_buildURL($url));
+                
+                if ($this->_scResponse->info->http_code == 200) {
+                    echo $this->_scResponse->data->html;
+                } else {
+                    echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $this->url) : '';
+                }
+            }
+            return;
+        }
+
+        if ((Yii::app()->cache != null) && ($this->cache == true)) {
+            $cachedUrl = Yii::app()->cache->get('yiiScUrl' . $this->url);
+            if ($cachedUrl == false) {
+                $this->_buildCurl($this->_buildURL($this->url));
+
+                if ($this->_scResponse->info->http_code == 200) {
+                    echo $this->_scResponse->data->html;
+                    Yii::app()->cache->set('yiiScUrl' . $this->url, $this->_scResponse->data->html, $this->cacheTime);
+                } else {
+                    echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $this->url) : '';
+                }
+            } else {
+                echo $cachedUrl;
+            }
+        } else {
+            $this->_buildCurl($this->_buildURL($this->url));
+
+            if ($this->_scResponse->info->http_code == 200) {
+                echo $this->_scResponse->data->html;
+            } else {
+                echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $this->url) : '';
+            }
+        }
     }
-      
+
     /**
      * Method to build cURL and make request.
      * @return object cURL Handler Response and Info
      * @access private
      */
     private function _buildCurl($url) {
-        $this->_curl = curl_init();     
+        $this->_curl = curl_init();
         curl_setopt($this->_curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($this->_curl, CURLOPT_URL, $url);
-        $this->_scResponse->data = json_decode(curl_exec($this->_curl)); 
-        $this->_scResponse->info = curl_getinfo($this->_curl);
+        $this->_scResponse->data = json_decode(curl_exec($this->_curl));
+
+        //fast and dirty way to convert array to object with json_encode/decode
+        $this->_scResponse->info = json_decode(json_encode(curl_getinfo($this->_curl)));
         curl_close($this->_curl);
     }
-    
+
     /**
      * build URL
      * @return string URL
@@ -172,7 +225,7 @@ class yiiSoundcloudPlayerWidget extends CWidget {
     private function _buildURL($destUrl) {
         $url = 'http://soundcloud.com/oembed?' . 'format=' . $this->_format;
         $url .= '&url=' . $destUrl;
-        $url .= isset($this->maxwidth) ? '&maxwidth=' . $this->maxwidth : '' ;
+        $url .= isset($this->maxwidth) ? '&maxwidth=' . $this->maxwidth : '';
         $url .= isset($this->maxheight) ? '&maxheight=' . $this->maxheight : '';
         $url .= isset($this->color) ? '&color=' . $this->color : '';
         $url .= isset($this->auto_play) ? '&auto_play=' . $this->auto_play : '';
@@ -180,5 +233,51 @@ class yiiSoundcloudPlayerWidget extends CWidget {
         $url .= isset($this->iframe) ? '&iframe=' . $this->iframe : '';
         return $url;
     }
+
+    /**
+     * cURL and Soundcloud API (HTTP) Error Code
+     * @return string
+     * @access private
+     */
+    private function _httpError($code, $url) {
+        switch ($code) {
+            case 400:
+                $data = "Bad Request";
+                break;
+            case 401:
+                $data = "Unauthorized";
+                break;
+            case 403:
+                $data = "Forbidden";
+                break;
+            case 404:
+                $data = "Not Found";
+                break;
+            case 406:
+                $data = "Not Accessible";
+                break;
+            case 422:
+                $data = "Unprocessable Entity";
+                break;
+            case 429:
+                $data = "Too Many Requests";
+                break;
+            case 500:
+                $data = "Internal Server Error";
+                break;
+            case 503:
+                $data = "Service Unavailable";
+                break;
+            case 504:
+                $data = "Gateway Timeout";
+                break;
+            default:
+                $data = "Check cURL documentation for more information on this error code.";
+                break;
+        }
+        return "<p>HTTP Error: " . $code . " - " . $data . "</p><p>\$url: " . $url;
+    }
+
 }
+
 ?>
