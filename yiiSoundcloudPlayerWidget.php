@@ -161,7 +161,12 @@ class yiiSoundcloudPlayerWidget extends CWidget
 
         if (is_string($this->url)) {
             echo $this->_getData($this->url);
+        } else {
+            if ($this->devel == true) {
+                echo 'url should be string or array and is ' . gettype($this->url);
+            }
         }
+            
     }
 
     /**
