@@ -9,7 +9,7 @@
  * @link        http://github.com/njasm/Yii-Soundcloud-Player-Widget
  * @category    Web Services
  * @package     Soundcloud Player Widget
- * @version     0.0.2
+ * @version     0.0.3
  */
 
 /**
@@ -36,8 +36,8 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-class yiiSoundcloudPlayerWidget extends CWidget {
-
+class yiiSoundcloudPlayerWidget extends CWidget
+{
     /**
      * cURL Handler
      * @var Object
@@ -130,10 +130,17 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      */
     public $iframe = true;
 
-    public function run() {
+    public function run()
+    {
         if (!extension_loaded('curl')) {
             if ($this->devel == true) {
                 echo '<p>We need cURL extension loaded in php to be able to run. today is a sad day ;(</p>';
+            }
+            return;
+        }
+        if (!function_exists('json_decode')) {
+            if ($this->devel == true) {
+                echo '<p>We need json extension :(</p>';
             }
             return;
         }
@@ -147,56 +154,44 @@ class yiiSoundcloudPlayerWidget extends CWidget {
 
         if (is_array($this->url)) {
             foreach ($this->url as $url) {
-                // are this application using cache? and can we cache our data?!
-                if ((Yii::app()->cache != null) && ($this->cache == true)) {
-                    // check if we have $this->url already on cache server
-                    $cachedUrl = Yii::app()->cache->get('yiiScUrl' . $url);
-                    if ($cachedUrl === false) {
-                        $this->_buildCurl($this->_buildURL($url));
-
-                        if ($this->_scResponse->info->http_code == 200) {
-                            echo $this->_scResponse->data->html;
-                            Yii::app()->cache->set('yiiScUrl' . $url, $this->_scResponse->data->html, $this->cacheTime);
-                        } else {
-                            echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $url) : '';
-                        }
-                    } else {
-                        echo $cachedUrl;
-                    }
-                    continue;
-                }
-                $this->_buildCurl($this->_buildURL($url));
-                
-                if ($this->_scResponse->info->http_code == 200) {
-                    echo $this->_scResponse->data->html;
-                } else {
-                    echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $this->url) : '';
-                }
+                echo $this->_getData($url);
             }
             return;
         }
 
+        if (is_string($this->url)) {
+            echo $this->_getData($this->url);
+        }
+    }
+
+    /**
+     * Method to start querying soundcloud oembed for iframe data
+     * @access private
+     * @return string iframe from soundcloud oembed
+     */
+    private function _getData($url)
+    {
         if ((Yii::app()->cache != null) && ($this->cache == true)) {
-            $cachedUrl = Yii::app()->cache->get('yiiScUrl' . $this->url);
+            $cachedUrl = Yii::app()->cache->get('yiiScUrl' . $url);
             if ($cachedUrl == false) {
-                $this->_buildCurl($this->_buildURL($this->url));
+                $this->_buildCurl($this->_buildURL($url));
 
                 if ($this->_scResponse->info->http_code == 200) {
-                    echo $this->_scResponse->data->html;
-                    Yii::app()->cache->set('yiiScUrl' . $this->url, $this->_scResponse->data->html, $this->cacheTime);
+                    Yii::app()->cache->set('yiiScUrl' . $url, $this->_scResponse->data->html, $this->cacheTime);
+                    return $this->_scResponse->data->html;
                 } else {
-                    echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $this->url) : '';
+                    echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $url) : '';
                 }
             } else {
-                echo $cachedUrl;
+                return $cachedUrl;
             }
         } else {
-            $this->_buildCurl($this->_buildURL($this->url));
+            $this->_buildCurl($this->_buildURL($url));
 
             if ($this->_scResponse->info->http_code == 200) {
-                echo $this->_scResponse->data->html;
+                return $this->_scResponse->data->html;
             } else {
-                echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $this->url) : '';
+                echo ($this->devel == true) ? $this->_httpError($this->_scResponse->info->http_code, $url) : '';
             }
         }
     }
@@ -206,7 +201,8 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      * @return object cURL Handler Response and Info
      * @access private
      */
-    private function _buildCurl($url) {
+    private function _buildCurl($url)
+    {
         $this->_curl = curl_init();
         curl_setopt($this->_curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($this->_curl, CURLOPT_URL, $url);
@@ -222,7 +218,8 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      * @return string URL
      * @access private
      */
-    private function _buildURL($destUrl) {
+    private function _buildURL($destUrl)
+    {
         $url = 'http://soundcloud.com/oembed?' . 'format=' . $this->_format;
         $url .= '&url=' . $destUrl;
         $url .= isset($this->maxwidth) ? '&maxwidth=' . $this->maxwidth : '';
@@ -239,7 +236,8 @@ class yiiSoundcloudPlayerWidget extends CWidget {
      * @return string
      * @access private
      */
-    private function _httpError($code, $url) {
+    private function _httpError($code, $url)
+    {
         switch ($code) {
             case 400:
                 $data = "Bad Request";
@@ -275,7 +273,7 @@ class yiiSoundcloudPlayerWidget extends CWidget {
                 $data = "Check cURL documentation for more information on this error code.";
                 break;
         }
-        return "<p>HTTP Error: " . $code . " - " . $data . "</p><p>\$url: " . $url;
+        return "<p>HTTP Error: " . $code . " - " . $data . "</p><p>url: " . $url;
     }
 
 }
