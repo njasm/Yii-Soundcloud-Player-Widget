@@ -6,12 +6,14 @@
 
 ### Changelog
 
-* 0.0.1 
-    1. Initial Version
+* 0.0.3
+    2. Code Optimization
 * 0.0.2 
     1. Added **devel** parameter to print out or not, the cURL and Soundcloud API errors 
     2. Cache support for high-traffic web apps and Soundcloud api polite usage :) - params **cache** and **cacheTime**
     (see Full Parameters Example for usage)
+* 0.0.1 
+    1. Initial Version
 
 ### How To Use
 
